@@ -5,8 +5,8 @@ asm { .needed "./librubj.so" }
 #define IMPORT
 #endif
 
-void init_interp(void) __attribute__((import));
-void interp_main_loop(void) __attribute__((import));
+void init_interp(void) IMPORT;
+void interp_main_loop(void) IMPORT;
 
 int main(int argc, char **argv, char **envp)
 {
