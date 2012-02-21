@@ -10,9 +10,7 @@ class Parser
 		# token raw data
 		attr_accessor :raw_str, :raw_off, :raw_pre_spc_off, :raw_end_off
 
-		def initialize
-			# file =; lineno =
-		end
+		#def initialize(file='moo'); @file = file; end
 	end
 
 	attr_accessor :src, :off
@@ -77,13 +75,13 @@ class Parser
 					when ?_
 					when ?0..?9
 						tok.value *= 16
-						tok.value += c - ?0.ord
+						tok.value += c.ord - ?0.ord
 					when ?a..?f
 						tok.value *= 16
-						tok.value += c - ?a.ord + 10
+						tok.value += c.ord - ?a.ord + 10
 					when ?A..?F
 						tok.value *= 16
-						tok.value += c - ?A.ord + 10
+						tok.value += c.ord - ?A.ord + 10
 					else break
 					end
 					@off += 1
@@ -94,7 +92,7 @@ class Parser
 					when ?_
 					when ?0..?9
 						tok.value *= 10
-						tok.value += c - ?0.ord
+						tok.value += c.ord - ?0.ord
 					else break
 					end
 					@off += 1
@@ -107,7 +105,7 @@ class Parser
 						case c = @src[@off]
 						when ?_
 						when ?0..?9
-							tok.value += (c - ?0.ord) * mul
+							tok.value += (c.ord - ?0.ord) * mul
 							mul /= 10.0
 						else break
 						end
@@ -279,6 +277,8 @@ class Parser
 			@off += 1
 			tok.type = :integer
 			case c = @src[@off]
+			when ?\ , ?\t, ?\r, ?\n
+				tok.type = :punctuation
 			when ?\\
 				@off += 1
 				case v = readtok_str_escape
@@ -349,54 +349,54 @@ class Parser
 		@off += 1
 		case c
 		when nil; :err_eof
-		when ?t; ?\t
-		when ?r; ?\r
-		when ?n; ?\n
+		when ?t; ?\t.ord
+		when ?r; ?\r.ord
+		when ?n; ?\n.ord
 		when ?x
 			v = :err_escape
 			case c = @src[@off]
 			when ?0..?9
-				v = c - ?0.ord
+				v = c.ord - ?0.ord
 				@off += 1
 			when ?a..?f
-				v = c - ?a.ord + 10
+				v = c.ord - ?a.ord + 10
 				@off += 1
 			when ?A..?F
-				v = c - ?A.ord + 10
+				v = c.ord - ?A.ord + 10
 				@off += 1
 			end
 			case c = @src[@off]
 			when ?0..?9
 				v *= 16
-				v += c - ?0.ord
+				v += c.ord - ?0.ord
 				@off += 1
 			when ?a..?f
 				v *= 16
-				v += c - ?a.ord + 10
+				v += c.ord - ?a.ord + 10
 				@off += 1
 			when ?A..?F
 				v *= 16
-				v += c - ?A.ord + 10
+				v += c.ord - ?A.ord + 10
 				@off += 1
 			end
 			v
 		when ?0..?7
-			v = c - ?0.ord
+			v = c.ord - ?0.ord
 			case c = @src[@off]
 			when ?0..?7
 				v *= 8
-				v += c - ?0.ord
+				v += c.ord - ?0.ord
 				@off += 1
 				case c = @src[@off]
 				when ?0..?7
 					v *= 8
-					v += c - ?0.ord
+					v += c.ord - ?0.ord
 					@off += 1
 				end
 			end
 			v
 		# TODO more escapes
-		else c
+		else c.ord
 		end
 	end
 
@@ -415,10 +415,10 @@ class Parser
 			when 'case'
 			when 'return'
 			when 'when', 'end', '}'
-  				unreadtok tok
-  				break
+				unreadtok tok
+				break
 			else
-  				unreadtok tok
+				unreadtok tok
 				seq << parse_expression
 			end
 		end
@@ -432,5 +432,6 @@ class Parser
 		@lineno = 1
 		# @filename =
 		parse_statement
+		#p @src[@off, 80] if @src.length > @off
 	end
 end
