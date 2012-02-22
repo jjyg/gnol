@@ -53,7 +53,7 @@ class Parser
 
 		tok.raw_off = @off
 
-		# TODO heredoc, DATA/__END__, __FILE__, __LINENO__, backslash-nl, %q{}
+		# TODO heredoc, DATA/__END__, __FILE__, __LINENO__, backslash-nl, %q{}, =begin
 		case c
 		when ?a..?z, ?A..?Z, ?_
 			@off += 1
@@ -86,6 +86,19 @@ class Parser
 					end
 					@off += 1
 				end
+			elsif c == ?0 and (@src[@off] == ?b or @src[@off] == ?B)
+				@off += 2
+				loop do
+					case c = @src[@off]
+					when ?_
+					when ?0, ?1
+						tok.value *= 2
+						tok.value += c.ord - ?0.ord
+					else break
+					end
+					@off += 1
+				end
+			# TODO 0o007, 0d98
 			else
 				loop do
 					case c = @src[@off]
@@ -97,6 +110,7 @@ class Parser
 					end
 					@off += 1
 				end
+				# TODO 1e42
 				if c == ?. and ((?0..?9) === @src[@off+1])
 					tok.type = :float
 					@off += 1
@@ -122,6 +136,16 @@ class Parser
 					@off += 1
 					case @src[@off]
 					when ?a..?z, ?A..?Z, ?_, ?0..?9
+					else break
+					end
+				end
+			when ?0
+				@off += 1
+			when ?1..?9
+				loop do
+					@off += 1
+					case @src[@off]
+					when ?0..?9
 					else break
 					end
 				end
@@ -185,11 +209,17 @@ class Parser
 					case c = @src[@off]
 					when ?a..?z, ?A..?Z, ?_, ?0..?9
 						tok.value << c
+					when ??, ?!, ?=
+						tok.value << c; break
 					else break
 					end
 				end
+			when ?:
+				# :: scope operator
+				@off += 1
+				tok.type = :punctuation
 			else
-				# single ':' (eg hash delimiter)
+				# single ':' (hash delimiter, a?b:c)
 				tok.type = :punctuation
 			end
 		when ?@
@@ -219,16 +249,24 @@ class Parser
 			when ?=
 				@off += 1
 				@off += 1 if @src[@off] == ?=
-			when ?~
+			when ?~, ?>
 				@off += 1
 			end
 		when ?+, ?-, ?/, ?%, ?^, ?!
 			@off += 1
 			@off += 1 if @src[@off] == ?=
-		when ?*, ?>, ?<, ?&, ?|
+		when ?*, ?>, ?&, ?|
 			@off += 1
 			@off += 1 if @src[@off] == c
 			@off += 1 if @src[@off] == ?=
+		when ?<
+			@off += 1
+			if @src[@off] == ?= and @src[@off+1] == ?>
+				@off += 2
+			else
+				@off += 1 if @src[@off] == c
+				@off += 1 if @src[@off] == ?=
+			end
 		when ?,, ?;, ?[, ?], ?{, ?}, ?(, ?), ?~
 			@off += 1
 			# nothing to do
@@ -284,6 +322,16 @@ class Parser
 				case v = readtok_str_escape
 				when Integer; tok.value = v
 				else return	# XXX raise
+				end
+			when ?a..?z, ?A..?Z, ?_
+			# TODO idem when ?@, ?$
+				case @src[@off+1]
+				when ?a..?z, ?A..?Z, ?_, ?0..?9, ??, ?!
+					# ternary
+					tok.type = :punctuation
+				else
+					@off += 1
+					tok.value = c
 				end
 			else
 				@off += 1
@@ -395,7 +443,7 @@ class Parser
 				end
 			end
 			v
-		# TODO more escapes
+		# TODO more escapes, \M-x, \C-x
 		else c.ord
 		end
 	end
