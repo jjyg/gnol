@@ -269,7 +269,6 @@ class Parser
 			end
 		when ?,, ?;, ?[, ?], ?{, ?}, ?(, ?), ?~
 			@off += 1
-			# nothing to do
 		when ?.
 			@off += 1
 			@off += 1 if @src[@off] == c
@@ -443,43 +442,113 @@ class Parser
 				end
 			end
 			v
+
 		# TODO more escapes, \M-x, \C-x
 		else c.ord
 		end
 	end
 
+	# t1 = readtok ; t2 = readtok ; unreadtok(t1) ; unreadtok(t2)
 	def unreadtok(tok)
 		@unreadtok << tok
 	end
 
-	def parse_statement
-		seq = []
-
-		while tok = readtok
-			case tok.value
-			when 'class'
-			when 'def'
-			when 'if'
-			when 'case'
-			when 'return'
-			when 'when', 'end', '}'
-				unreadtok tok
-				break
-			else
-				unreadtok tok
-				seq << parse_expression
-			end
+	def parse_expression
+		tok = readtok
+		if tok.type == :identifier and respond_to?("parse_expr_#{tok.value}")
+			send("parse_expr_#{tok.value}")
+		else
+			# moo
 		end
-
-		[:seq, seq]
 	end
 
-	def parse(str)
+	def parse_expr_class
+		n = readtok
+		if n.type == :punctuation
+			case n.value
+			when '<<'
+				target = parse_expression
+			when '<'
+				sclass = parse_expression
+			else
+				raise "unexpected class #{n.value}"
+			end
+		end
+	end
+
+	def parse_expr_def
+	end
+
+	def parse_expr_if
+	end
+
+	def parse_expr_unless
+	end
+
+	def parse_expr_case
+	end
+
+	def parse_expr_when
+	end
+
+	def parse_expr_while
+	end
+
+	def parse_expr_until
+	end
+
+	def parse_expr_return
+	end
+
+	def parse_expr_next
+	end
+
+	def parse_expr_break
+	end
+
+	def parse_expr_do
+	end
+
+	def parse_expr_begin
+	end
+
+	def parse_expr_rescue
+	end
+
+	def parse_expr_ensure
+	end
+
+	def parse_expr_super
+	end
+
+	def parse_expr_defined?
+	end
+
+	# else end and or not
+
+	# raise yield block_given? caller throw catch BEGIN END trap true false nil
+
+	def parse_sequence(seq=nil)
+		seq ||= [:seq, []]
+		while st = parse_expression
+			seq[1] << st
+		end
+		seq
+	end
+
+	def parse(str, filename = '-e')
 		@src = str
 		@off = 0
 		@lineno = 1
-		# @filename =
-		parse_statement
+		@filename = filename
+
+		@classes = {}
+		@constants = {}
+		@nesting = []
+
+		@toplevel = [:seq, []]
+		parse_sequence(@toplevel)
+
 		#p @src[@off, 80] if @src.length > @off
 	end
 end
