@@ -19,13 +19,13 @@ int mprotect(void *addr, int len, int prot);
 int munmap(void *addr, int len);
 
 
-/* rubj headers */
+/* gnol headers */
 typedef struct string {
 	int len;
 	char *buf;
 } string;
 
-/* rubj globals */
+/* gnol globals */
 // array all_objects;
 // hash globals;
 // hash toplevel_constants; 	// == globals?
@@ -33,7 +33,7 @@ typedef struct string {
 // string toplevel_bytecode;
 
 
-/* rubj stdlib */
+/* gnol stdlib */
 int kernel_puts(void *self, void *str)
 {
 	int printf(char *, ...);
@@ -50,7 +50,7 @@ string *string_new2(char *buf, int len)
 }
 
 
-/* rubj init */
+/* gnol init */
 // char main_bytecode[42] = { 28, 'l', 'o', 'l' };
 //#include "init_bytecode.h"	// load the ruby parser / compiler to vm bytecode
 
@@ -64,7 +64,7 @@ enum vm_bytecode_opcodes {
 void init_interp(void) EXPORT
 {
 	/* signal(EFAULT, stack_underflow__backtraces__etc); */
-	/* init all rubj globals */
+	/* init all gnol globals */
 
 	char *ptr = main_bytecode;
 	*ptr = bc_native_funcall_2; ptr += 1;

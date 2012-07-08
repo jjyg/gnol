@@ -1,6 +1,6 @@
 #ifdef __METASM__
 #define IMPORT __attribute__((import))
-asm { .needed "./librubj.so" }
+asm { .needed "./libgnol.so" }
 #else
 #define IMPORT
 #endif

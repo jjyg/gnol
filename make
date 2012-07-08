@@ -12,5 +12,5 @@ def compile(src, outfile, *args)
 	exe.encode_file(outfile, *args)
 end
 
-compile 'librubj.c', 'librubj.so', :lib
-compile 'main.c', 'rubj'
+compile 'libgnol.c', 'libgnol.so', :lib
+compile 'main.c', 'gnol'
